@@ -123,7 +123,7 @@ SeeAlso: iaf_cond_alpha, aeif_cond_exp, aeif_cond_alpha
 namespace nest
 {
 /**
- * Function computing right-hand side of ODE for GSL solver.
+ * Function computing right-hand side of ODE for GSL solver if Delta_T != 0.
  * @note Must be declared here so we can befriend it in class.
  * @note Must have C-linkage for passing to GSL. Internally, it is
  *       a first-class C++ function, but cannot be a member function
@@ -134,6 +134,19 @@ namespace nest
  */
 extern "C" int
 aeif_cond_alpha_gp_dynamics( double, const double*, double*, void* );
+
+/**
+ * Function computing right-hand side of ODE for GSL solver if Delta_T == 0.
+ * @note Must be declared here so we can befriend it in class.
+ * @note Must have C-linkage for passing to GSL. Internally, it is
+ *       a first-class C++ function, but cannot be a member function
+ *       because of the C-linkage.
+ * @note No point in declaring it inline, since it is called
+ *       through a function pointer.
+ * @param void* Pointer to model neuron instance.
+ */
+extern "C" int
+aeif_cond_alpha_gp_dynamics_DT0( double, const double*, double*, void* );
 
 class aeif_cond_alpha_gp : public Archiving_Node
 {
@@ -179,6 +192,8 @@ private:
   // make dynamics function quasi-member
   friend int
   aeif_cond_alpha_gp_dynamics( double, const double*, double*, void* );
+  friend int
+  aeif_cond_alpha_gp_dynamics_DT0( double, const double*, double*, void* );
 
   // The next two classes need to be friends to access the State_ class/member
   friend class RecordablesMap< aeif_cond_alpha_gp >;
@@ -283,7 +298,6 @@ public:
     gsl_odeiv_step* s_;    //!< stepping function
     gsl_odeiv_control* c_; //!< adaptive stepsize control function
     gsl_odeiv_evolve* e_;  //!< evolution function
-    gsl_odeiv_system sys_; //!< struct describing system
 
     // IntergrationStep_ should be reset with the neuron on ResetNetwork,
     // but remain unchanged during calibration. Since it is initialized with
@@ -317,6 +331,10 @@ public:
 
     int_t RefractoryCounts_;
     double_t RefractoryOffset_;
+    
+    // specificity of the aEIF model: gsl system is moved here for easy update
+    // if Delta_T is set to (non)zero values
+    gsl_odeiv_system sys_; //!< struct describing system
   };
 
   // Access functions for UniversalDataLogger -------------------------------
