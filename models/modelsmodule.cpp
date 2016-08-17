@@ -42,6 +42,7 @@
 // Neuron models
 #include "aeif_cond_alpha.h"
 #include "aeif_cond_alpha_gp.h"
+#include "aeif_cond_alpha_ugp.h"
 #include "aeif_cond_alpha_multisynapse.h"
 #include "aeif_cond_alpha_RK5.h"
 #include "aeif_cond_exp.h"
@@ -330,6 +331,8 @@ ModelsModule::init( SLIInterpreter* )
     "aeif_cond_alpha" );
   kernel().model_manager.register_node_model< aeif_cond_alpha_gp >(
     "aeif_cond_alpha_gp" );
+  kernel().model_manager.register_node_model< aeif_cond_alpha_ugp >(
+    "aeif_cond_alpha_ugp" );
   kernel().model_manager.register_node_model< aeif_cond_exp >(
     "aeif_cond_exp" );
   kernel().model_manager.register_node_model< aeif_cond_exp_gp >(
