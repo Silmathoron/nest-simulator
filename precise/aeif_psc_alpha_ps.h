@@ -206,13 +206,13 @@ private:
   void calibrate();
 
   //! Take neuron through given time interval
-  void update( const Time&, const long_t, const long_t );
+  void update( const Time&, const long, const long );
 
   //! Find the precise time of network crossing
   void interpolate_( double&, double );
 
   //! Send spike and set refractoriness
-  void spiking_( const long_t, const long_t, const double );
+  void spiking_( const long, const long, const double );
 
   // The next two classes need to be friends to access the State_ class/member
   friend class RecordablesMap< aeif_psc_alpha_ps >;
@@ -238,25 +238,25 @@ private:
   */
   struct Parameters_
   {
-    double_t V_peak_;  //!< Spike detection threshold in mV
-    double_t V_reset_; //!< Reset Potential in mV
-    double_t t_ref_;   //!< Refractory period in ms
+    double V_peak_;  //!< Spike detection threshold in mV
+    double V_reset_; //!< Reset Potential in mV
+    double t_ref_;   //!< Refractory period in ms
 
-    double_t g_L;     //!< Leak Conductance in nS
-    double_t C_m;     //!< Membrane Capacitance in pF
-    double_t E_L;     //!< Leak reversal Potential (aka resting potential) in mV
-    double_t Delta_T; //!< Slope faktor in ms.
-    double_t tau_w;   //!< adaptation time-constant in ms.
-    double_t a;       //!< Subthreshold adaptation in nS.
-    double_t b;       //!< Spike-triggered adaptation in pA
-    double_t V_th;    //!< Spike threshold in mV.
-    double_t t_ref;   //!< Refractory period in ms.
-    double_t tau_syn_ex; //!< Excitatory synaptic rise time.
-    double_t tau_syn_in; //!< Excitatory synaptic rise time.
-    double_t I_e;        //!< Intrinsic current in pA.
-    int interpol_order;  //!< Interpolation order (from 1 to 3)
+    double g_L;     //!< Leak Conductance in nS
+    double C_m;     //!< Membrane Capacitance in pF
+    double E_L;     //!< Leak reversal Potential (aka resting potential) in mV
+    double Delta_T; //!< Slope faktor in ms.
+    double tau_w;   //!< adaptation time-constant in ms.
+    double a;       //!< Subthreshold adaptation in nS.
+    double b;       //!< Spike-triggered adaptation in pA
+    double V_th;    //!< Spike threshold in mV.
+    double t_ref;   //!< Refractory period in ms.
+    double tau_syn_ex;  //!< Excitatory synaptic rise time.
+    double tau_syn_in;  //!< Excitatory synaptic rise time.
+    double I_e;         //!< Intrinsic current in pA.
+    int interpol_order; //!< Interpolation order (from 1 to 3)
 
-    double_t gsl_error_tol; //!< error bound for GSL integrator
+    double gsl_error_tol; //!< error bound for GSL integrator
 
     Parameters_(); //!< Sets default parameter values
 
@@ -303,13 +303,13 @@ public:
       STATE_VEC_SIZE
     };
 
-    double_t
+    double
       y_[ STATE_VEC_SIZE ]; //!< neuron state, must be C-array for GSL solver
-    double_t y_old_[ STATE_VEC_SIZE ]; //!< old neuron state, must be C-array
-                                       //!for GSL solver
-    int_t r_;                          //!< number of refractory steps remaining
-    double_t r_offset_; // offset on the refractory time if it is not a multiple
-                        // of step_
+    double y_old_[ STATE_VEC_SIZE ]; //!< old neuron state, must be C-array
+                                     //! for GSL solver
+    unsigned int r_;                 //!< number of refractory steps remaining
+    double r_offset_; // offset on the refractory time if it is not a multiple
+                      // of step_
 
     State_( const Parameters_& ); //!< Default initialization
     State_( const State_& );
@@ -354,7 +354,7 @@ public:
     // but remain unchanged during calibration. Since it is initialized with
     // step_, and the resolution cannot change after nodes have been created,
     // it is safe to place both here.
-    double_t step_;          //!< step size in ms
+    double step_;            //!< step size in ms
     double IntegrationStep_; //!< current integration time step, updated by GSL
 
     /**
@@ -364,7 +364,7 @@ public:
     * It must be a part of Buffers_, since it is initialized once before
     * the first simulation, but not modified before later Simulate calls.
     */
-    double_t I_stim_;
+    double I_stim_;
   };
 
   /**
@@ -380,13 +380,13 @@ public:
   struct Variables_
   {
     /** initial value to normalise excitatory synaptic conductance */
-    double_t I0_ex_;
+    double I0_ex_;
 
     /** initial value to normalise inhibitory synaptic conductance */
-    double_t I0_in_;
+    double I0_in_;
 
-    int_t RefractoryCounts_;
-    double_t RefractoryOffset_;
+    unsigned int RefractoryCounts_;
+    double RefractoryOffset_;
   };
 
   /**
@@ -395,14 +395,14 @@ public:
   */
   //! Read out the real membrane potential
   template < State_::StateVecElems elem >
-  double_t
+  double
   get_y_elem_() const
   {
     return S_.y_[ elem ];
   }
   //! Read out the old state
   template < State_::StateVecElems elem >
-  double_t
+  double
   get_y_old_elem_() const
   {
     return S_.y_old_[ elem ];

@@ -469,7 +469,8 @@ public:
   // Unary operators
   /////////////////////////////////////////////////////////////
 
-  Time& operator+=( const Time& t )
+  Time&
+  operator+=( const Time& t )
   {
     tics += t.tics;
     range();
@@ -551,42 +552,50 @@ const Time TimeZero;
 // Binary operators
 /////////////////////////////////////////////////////////////
 
-inline bool operator==( const Time& t1, const Time& t2 )
+inline bool
+operator==( const Time& t1, const Time& t2 )
 {
   return t1.tics == t2.tics;
 }
 
-inline bool operator!=( const Time& t1, const Time& t2 )
+inline bool
+operator!=( const Time& t1, const Time& t2 )
 {
   return t1.tics != t2.tics;
 }
 
-inline bool operator<( const Time& t1, const Time& t2 )
+inline bool
+operator<( const Time& t1, const Time& t2 )
 {
   return t1.tics < t2.tics;
 }
 
-inline bool operator>( const Time& t1, const Time& t2 )
+inline bool
+operator>( const Time& t1, const Time& t2 )
 {
   return t1.tics > t2.tics;
 }
 
-inline bool operator<=( const Time& t1, const Time& t2 )
+inline bool
+operator<=( const Time& t1, const Time& t2 )
 {
   return t1.tics <= t2.tics;
 }
 
-inline bool operator>=( const Time& t1, const Time& t2 )
+inline bool
+operator>=( const Time& t1, const Time& t2 )
 {
   return t1.tics >= t2.tics;
 }
 
-inline Time operator+( const Time& t1, const Time& t2 )
+inline Time
+operator+( const Time& t1, const Time& t2 )
 {
   return Time::tic( t1.tics + t2.tics ); // check range
 }
 
-inline Time operator-( const Time& t1, const Time& t2 )
+inline Time
+operator-( const Time& t1, const Time& t2 )
 {
   return Time::tic( t1.tics - t2.tics ); // check range
 }

@@ -103,24 +103,27 @@ nest::aeif_psc_exp_ps_dynamics( double,
   // good compiler will optimize the verbosity away ...
 
   // shorthand for state variables
-  const double_t& V = y[ S::V_M ];
-  const double_t& I_ex = y[ S::I_EXC ];
-  const double_t& I_in = y[ S::I_INH ];
-  const double_t& w = y[ S::W ];
+  const double& V = y[ S::V_M ];
+  const double& I_ex = y[ S::I_EXC ];
+  const double& I_in = y[ S::I_INH ];
+  const double& w = y[ S::W ];
 
   // We pre-compute the argument of the exponential
-  const double_t exp_arg = ( V - node.P_.V_th ) / node.P_.Delta_T;
+  const double exp_arg = ( V - node.P_.V_th ) / node.P_.Delta_T;
 
   // Upper bound for exponential argument to avoid numerical instabilities
-  const double_t MAX_EXP_ARG = 10.;
+  const double MAX_EXP_ARG = 10.;
 
   // If the argument is too large, we clip it.
-  const double_t I_spike =
+  const double I_spike =
     node.P_.Delta_T * std::exp( std::min( exp_arg, MAX_EXP_ARG ) );
 
   // dv/dt
-  f[ S::V_M ] = ( -node.P_.g_L * ( ( V - node.P_.E_L ) - I_spike ) + I_ex - I_in
-                  - w + node.P_.I_e + node.B_.I_stim_ ) / node.P_.C_m;
+  f[ S::V_M ] =
+    ( -node.P_.g_L * ( ( V - node.P_.E_L ) - I_spike ) + I_ex - I_in - w
+      + node.P_.I_e
+      + node.B_.I_stim_ )
+    / node.P_.C_m;
 
   f[ S::I_EXC ] = -I_ex / node.P_.tau_syn_ex; // Synaptic current (pA)
   f[ S::I_INH ] = -I_in / node.P_.tau_syn_in; // Synaptic current (pA)
@@ -172,8 +175,8 @@ nest::aeif_psc_exp_ps::State_::State_( const State_& s )
     y_[ i ] = s.y_[ i ];
 }
 
-nest::aeif_psc_exp_ps::State_& nest::aeif_psc_exp_ps::State_::operator=(
-  const State_& s )
+nest::aeif_psc_exp_ps::State_&
+nest::aeif_psc_exp_ps::State_::operator=( const State_& s )
 {
   assert( this != &s ); // would be bad logical error in program
 
@@ -408,12 +411,10 @@ nest::aeif_psc_exp_ps::interpolate_( double& t, double t_old )
 }
 
 void
-nest::aeif_psc_exp_ps::spiking_( const long_t T,
-  const long_t lag,
-  const double t )
+nest::aeif_psc_exp_ps::spiking_( const long T, const long lag, const double t )
 {
   // spike event
-  const double_t offset = B_.step_ - t;
+  const double offset = B_.step_ - t;
   set_spiketime( Time::step( T + 1 ), offset );
   SpikeEvent se;
   se.set_offset( offset );
@@ -440,8 +441,8 @@ nest::aeif_psc_exp_ps::spiking_( const long_t T,
 
 void
 nest::aeif_psc_exp_ps::update( const Time& origin,
-  const long_t from,
-  const long_t to )
+  const long from,
+  const long to )
 {
   assert(
     to >= 0 && ( delay ) from < kernel().connection_manager.get_min_delay() );
@@ -462,19 +463,19 @@ nest::aeif_psc_exp_ps::update( const Time& origin,
   {
     S_.y_[ State_::V_M ] = P_.V_reset_;
     S_.y_[ State_::W ] += P_.b;
-    const double_t init_offset =
-      B_.step_ * ( 1 - std::numeric_limits< double_t >::epsilon() );
+    const double init_offset =
+      B_.step_ * ( 1 - std::numeric_limits< double >::epsilon() );
     set_spiketime( Time::step( origin.get_steps() + from + 1 ), init_offset );
     SpikeEvent se;
     se.set_offset(
-      B_.step_ * ( 1 - std::numeric_limits< double_t >::epsilon() ) );
+      B_.step_ * ( 1 - std::numeric_limits< double >::epsilon() ) );
     kernel().event_delivery_manager.send( *this, se, from );
   }
 
-  for ( long_t lag = from; lag < to; ++lag )
+  for ( long lag = from; lag < to; ++lag )
   {
     // time at start of update step
-    const long_t T = origin.get_steps() + lag;
+    const long T = origin.get_steps() + lag;
     t = 0.;
     t_next_event = 0.;
 
@@ -558,7 +559,7 @@ nest::aeif_psc_exp_ps::handle( SpikeEvent& e )
 {
   assert( e.get_delay() > 0 );
 
-  const long_t Tdeliver = e.get_stamp().get_steps() + e.get_delay() - 1;
+  const long Tdeliver = e.get_stamp().get_steps() + e.get_delay() - 1;
   B_.events_.add_spike(
     e.get_rel_delivery_steps( kernel().simulation_manager.get_slice_origin() ),
     Tdeliver,
@@ -571,8 +572,8 @@ nest::aeif_psc_exp_ps::handle( CurrentEvent& e )
 {
   assert( e.get_delay() > 0 );
 
-  const double_t c = e.get_current();
-  const double_t w = e.get_weight();
+  const double c = e.get_current();
+  const double w = e.get_weight();
 
   // add weighted current; HEP 2002-10-04
   B_.currents_.add_value(

@@ -154,7 +154,8 @@ nest::spike_generator::Parameters_::assert_valid_spike_time_and_insert_(
 
     // The second part of the test handles subnormal values of offset.
     if ( ( std::fabs( offset ) < std::numeric_limits< double >::epsilon()
-             * std::fabs( t_spike.get_ms() + t ) * 2.0 )
+             * std::fabs( t_spike.get_ms() + t )
+             * 2.0 )
       || ( std::fabs( offset ) < std::numeric_limits< double >::min() ) )
     {
       // if difference is smaller than scaled epsilon it is zero
@@ -260,7 +261,8 @@ nest::spike_generator::Parameters_::set( const DictionaryDatum& d,
 
   // Set position to start if something changed
   if ( updated_spike_times || updated_spike_weights
-    || updated_spike_multiplicities || d->known( names::origin ) )
+    || updated_spike_multiplicities
+    || d->known( names::origin ) )
     s.position_ = 0;
 }
 

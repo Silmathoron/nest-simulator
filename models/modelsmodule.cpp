@@ -41,10 +41,10 @@
 
 // Neuron models
 #include "aeif_cond_alpha.h"
-#include "aeif_cond_alpha_gp.h"
-#include "aeif_cond_alpha_ugp.h"
-#include "aeif_cond_alpha_multisynapse.h"
 #include "aeif_cond_alpha_RK5.h"
+#include "aeif_cond_alpha_gp.h"
+#include "aeif_cond_alpha_multisynapse.h"
+#include "aeif_cond_alpha_vbound_gp.h"
 #include "aeif_cond_exp.h"
 #include "aeif_cond_exp_gp.h"
 #include "aeif_psc_alpha_gp.h"
@@ -114,9 +114,9 @@
 #include "stdp_connection_facetshw_hom.h"
 #include "stdp_connection_facetshw_hom_impl.h"
 #include "stdp_connection_hom.h"
-#include "stdp_triplet_connection.h"
 #include "stdp_dopa_connection.h"
 #include "stdp_pl_connection_hom.h"
+#include "stdp_triplet_connection.h"
 #include "tsodyks2_connection.h"
 #include "tsodyks_connection.h"
 #include "tsodyks_connection_hom.h"
@@ -132,9 +132,9 @@
 #include "target_identifier.h"
 
 #ifdef HAVE_MUSIC
+#include "music_cont_in_proxy.h"
 #include "music_event_in_proxy.h"
 #include "music_event_out_proxy.h"
-#include "music_cont_in_proxy.h"
 #include "music_message_in_proxy.h"
 #endif
 
@@ -332,8 +332,8 @@ ModelsModule::init( SLIInterpreter* )
     "aeif_cond_alpha" );
   kernel().model_manager.register_node_model< aeif_cond_alpha_gp >(
     "aeif_cond_alpha_gp" );
-  kernel().model_manager.register_node_model< aeif_cond_alpha_ugp >(
-    "aeif_cond_alpha_ugp" );
+  kernel().model_manager.register_node_model< aeif_cond_alpha_vbound_gp >(
+    "aeif_cond_alpha_vbound_gp" );
   kernel().model_manager.register_node_model< aeif_cond_exp >(
     "aeif_cond_exp" );
   kernel().model_manager.register_node_model< aeif_cond_exp_gp >(

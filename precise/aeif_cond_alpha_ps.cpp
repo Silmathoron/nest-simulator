@@ -103,30 +103,33 @@ nest::aeif_cond_alpha_ps_dynamics( double,
   // good compiler will optimize the verbosity away ...
 
   // shorthand for state variables
-  const double_t& V = y[ S::V_M ];
-  const double_t& dg_ex = y[ S::DG_EXC ];
-  const double_t& g_ex = y[ S::G_EXC ];
-  const double_t& dg_in = y[ S::DG_INH ];
-  const double_t& g_in = y[ S::G_INH ];
-  const double_t& w = y[ S::W ];
+  const double& V = y[ S::V_M ];
+  const double& dg_ex = y[ S::DG_EXC ];
+  const double& g_ex = y[ S::G_EXC ];
+  const double& dg_in = y[ S::DG_INH ];
+  const double& g_in = y[ S::G_INH ];
+  const double& w = y[ S::W ];
 
-  const double_t I_syn_exc = g_ex * ( V - node.P_.E_ex );
-  const double_t I_syn_inh = g_in * ( V - node.P_.E_in );
+  const double I_syn_exc = g_ex * ( V - node.P_.E_ex );
+  const double I_syn_inh = g_in * ( V - node.P_.E_in );
 
   // We pre-compute the argument of the exponential
-  const double_t exp_arg = ( V - node.P_.V_th ) / node.P_.Delta_T;
+  const double exp_arg = ( V - node.P_.V_th ) / node.P_.Delta_T;
 
   // Upper bound for exponential argument to avoid numerical instabilities
-  const double_t MAX_EXP_ARG = 10.;
+  const double MAX_EXP_ARG = 10.;
 
   // If the argument is too large, we clip it.
-  const double_t I_spike =
+  const double I_spike =
     node.P_.Delta_T * std::exp( std::min( exp_arg, MAX_EXP_ARG ) );
 
   // dv/dt
   f[ S::V_M ] =
     ( -node.P_.g_L * ( ( V - node.P_.E_L ) - I_spike ) - I_syn_exc - I_syn_inh
-      - w + node.P_.I_e + node.B_.I_stim_ ) / node.P_.C_m;
+      - w
+      + node.P_.I_e
+      + node.B_.I_stim_ )
+    / node.P_.C_m;
 
   f[ S::DG_EXC ] = -dg_ex / node.P_.tau_syn_ex;
   f[ S::G_EXC ] =
@@ -185,8 +188,8 @@ nest::aeif_cond_alpha_ps::State_::State_( const State_& s )
     y_[ i ] = s.y_[ i ];
 }
 
-nest::aeif_cond_alpha_ps::State_& nest::aeif_cond_alpha_ps::State_::operator=(
-  const State_& s )
+nest::aeif_cond_alpha_ps::State_&
+nest::aeif_cond_alpha_ps::State_::operator=( const State_& s )
 {
   assert( this != &s ); // would be bad logical error in program
 
@@ -432,12 +435,12 @@ nest::aeif_cond_alpha_ps::interpolate_( double& t, double t_old )
 }
 
 void
-nest::aeif_cond_alpha_ps::spiking_( const long_t T,
-  const long_t lag,
+nest::aeif_cond_alpha_ps::spiking_( const long T,
+  const long lag,
   const double t )
 {
   // spike event
-  const double_t offset = B_.step_ - t;
+  const double offset = B_.step_ - t;
   set_spiketime( Time::step( T + 1 ), offset );
   SpikeEvent se;
   se.set_offset( offset );
@@ -464,8 +467,8 @@ nest::aeif_cond_alpha_ps::spiking_( const long_t T,
 
 void
 nest::aeif_cond_alpha_ps::update( const Time& origin,
-  const long_t from,
-  const long_t to )
+  const long from,
+  const long to )
 {
   assert(
     to >= 0 && ( delay ) from < kernel().connection_manager.get_min_delay() );
@@ -486,19 +489,19 @@ nest::aeif_cond_alpha_ps::update( const Time& origin,
   {
     S_.y_[ State_::V_M ] = P_.V_reset_;
     S_.y_[ State_::W ] += P_.b;
-    const double_t init_offset =
-      B_.step_ * ( 1 - std::numeric_limits< double_t >::epsilon() );
+    const double init_offset =
+      B_.step_ * ( 1 - std::numeric_limits< double >::epsilon() );
     set_spiketime( Time::step( origin.get_steps() + from + 1 ), init_offset );
     SpikeEvent se;
     se.set_offset(
-      B_.step_ * ( 1 - std::numeric_limits< double_t >::epsilon() ) );
+      B_.step_ * ( 1 - std::numeric_limits< double >::epsilon() ) );
     kernel().event_delivery_manager.send( *this, se, from );
   }
 
-  for ( long_t lag = from; lag < to; ++lag )
+  for ( long lag = from; lag < to; ++lag )
   {
     // time at start of update step
-    const long_t T = origin.get_steps() + lag;
+    const long T = origin.get_steps() + lag;
     t = 0.;
     t_next_event = 0.;
 
@@ -582,7 +585,7 @@ nest::aeif_cond_alpha_ps::handle( SpikeEvent& e )
 {
   assert( e.get_delay() > 0 );
 
-  const long_t Tdeliver = e.get_stamp().get_steps() + e.get_delay() - 1;
+  const long Tdeliver = e.get_stamp().get_steps() + e.get_delay() - 1;
   B_.events_.add_spike(
     e.get_rel_delivery_steps( kernel().simulation_manager.get_slice_origin() ),
     Tdeliver,
@@ -595,8 +598,8 @@ nest::aeif_cond_alpha_ps::handle( CurrentEvent& e )
 {
   assert( e.get_delay() > 0 );
 
-  const double_t c = e.get_current();
-  const double_t w = e.get_weight();
+  const double c = e.get_current();
+  const double w = e.get_weight();
 
   // add weighted current; HEP 2002-10-04
   B_.currents_.add_value(

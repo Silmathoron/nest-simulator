@@ -95,15 +95,17 @@ nest::iaf_psc_alpha_ps_dynamics( double,
   // good compiler will optimize the verbosity away ...
 
   // shorthand for state variables
-  const double_t& V = y[ S::V_M ];
-  const double_t& di_exc = y[ S::DI_EXC ];
-  const double_t& i_exc = y[ S::I_EXC ];
-  const double_t& di_inh = y[ S::DI_INH ];
-  const double_t& i_inh = y[ S::I_INH ];
+  const double& V = y[ S::V_M ];
+  const double& di_exc = y[ S::DI_EXC ];
+  const double& i_exc = y[ S::I_EXC ];
+  const double& di_inh = y[ S::DI_INH ];
+  const double& i_inh = y[ S::I_INH ];
 
   // dv/dt
-  f[ S::V_M ] = ( -node.P_.g_L * ( V - node.P_.E_L ) + i_exc - i_inh
-                  + node.P_.I_e + node.B_.I_stim_ ) / node.P_.C_m;
+  f[ S::V_M ] =
+    ( -node.P_.g_L * ( V - node.P_.E_L ) + i_exc - i_inh + node.P_.I_e
+      + node.B_.I_stim_ )
+    / node.P_.C_m;
 
   f[ S::DI_EXC ] = -di_exc / node.P_.tau_syn_exc;
   f[ S::I_EXC ] =
@@ -154,8 +156,8 @@ nest::iaf_psc_alpha_ps::State_::State_( const State_& s )
     y_[ i ] = s.y_[ i ];
 }
 
-nest::iaf_psc_alpha_ps::State_& nest::iaf_psc_alpha_ps::State_::operator=(
-  const State_& s )
+nest::iaf_psc_alpha_ps::State_&
+nest::iaf_psc_alpha_ps::State_::operator=( const State_& s )
 {
   assert( this != &s ); // would be bad logical error in program
 
@@ -384,12 +386,10 @@ nest::iaf_psc_alpha_ps::interpolate_( double& t, double t_old )
 }
 
 void
-nest::iaf_psc_alpha_ps::spiking_( const long_t T,
-  const long_t lag,
-  const double t )
+nest::iaf_psc_alpha_ps::spiking_( const long T, const long lag, const double t )
 {
   // spike event
-  const double_t offset = B_.step_ - t;
+  const double offset = B_.step_ - t;
   set_spiketime( Time::step( T + 1 ), offset );
   SpikeEvent se;
   se.set_offset( offset );
@@ -416,8 +416,8 @@ nest::iaf_psc_alpha_ps::spiking_( const long_t T,
 
 void
 nest::iaf_psc_alpha_ps::update( const Time& origin,
-  const long_t from,
-  const long_t to )
+  const long from,
+  const long to )
 {
   assert(
     to >= 0 && ( delay ) from < kernel().connection_manager.get_min_delay() );
@@ -437,19 +437,19 @@ nest::iaf_psc_alpha_ps::update( const Time& origin,
   if ( S_.y_[ State_::V_M ] >= P_.V_th )
   {
     S_.y_[ State_::V_M ] = P_.V_reset_;
-    const double_t init_offset =
-      B_.step_ * ( 1 - std::numeric_limits< double_t >::epsilon() );
+    const double init_offset =
+      B_.step_ * ( 1 - std::numeric_limits< double >::epsilon() );
     set_spiketime( Time::step( origin.get_steps() + from + 1 ), init_offset );
     SpikeEvent se;
     se.set_offset( init_offset );
     kernel().event_delivery_manager.send( *this, se, from );
   }
 
-  for ( long_t lag = from; lag < to; ++lag )
+  for ( long lag = from; lag < to; ++lag )
   {
     gsl_odeiv_step_reset( B_.s_ );
     // time at start of update step
-    const long_t T = origin.get_steps() + lag;
+    const long T = origin.get_steps() + lag;
     t = 0.;
     t_next_event = 0.;
 
@@ -532,7 +532,7 @@ nest::iaf_psc_alpha_ps::handle( SpikeEvent& e )
 {
   assert( e.get_delay() > 0 );
 
-  const long_t Tdeliver = e.get_stamp().get_steps() + e.get_delay() - 1;
+  const long Tdeliver = e.get_stamp().get_steps() + e.get_delay() - 1;
   B_.events_.add_spike(
     e.get_rel_delivery_steps( kernel().simulation_manager.get_slice_origin() ),
     Tdeliver,
@@ -545,8 +545,8 @@ nest::iaf_psc_alpha_ps::handle( CurrentEvent& e )
 {
   assert( e.get_delay() > 0 );
 
-  const double_t c = e.get_current();
-  const double_t w = e.get_weight();
+  const double c = e.get_current();
+  const double w = e.get_weight();
 
   // add weighted current; HEP 2002-10-04
   B_.currents_.add_value(

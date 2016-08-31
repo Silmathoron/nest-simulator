@@ -72,7 +72,7 @@ public:
    * @param  weight     Weight of spike.
    */
   void add_spike( const delay rel_delivery,
-    const long_t stamp,
+    const long stamp,
     const double ps_offset,
     const double weight );
 
@@ -82,7 +82,7 @@ public:
    * @param  stamp      Delivery time
    * @param  ps_offset  Precise timing offset of spike time
    */
-  void set_refractory( const long_t stamp, const double_t ps_offset );
+  void set_refractory( const long stamp, const double ps_offset );
 
   /**
    * Prepare for spike delivery in current slice by sorting.
@@ -110,11 +110,11 @@ public:
    *                   If several spikes coincide, the sum of their
    *                   weights is returned a single spike.
    */
-  void get_next_event( const long_t req_stamp,
-    double_t& ps_offset,
+  void get_next_event( const long req_stamp,
+    double& ps_offset,
     double& weight_in,
     double& weight_ex,
-    const double_t step_ );
+    const double step_ );
 
   /**
    * Clear buffer
@@ -132,7 +132,7 @@ private:
    */
   struct SpikeInfo
   {
-    SpikeInfo( long_t stamp, double_t ps_offset, double_t weight );
+    SpikeInfo( long stamp, double ps_offset, double weight );
 
     bool operator<( const SpikeInfo& b ) const;
     bool operator<=( const SpikeInfo& b ) const;
@@ -140,9 +140,9 @@ private:
 
     // data elements must not be const, since heap implementation
     // in DEC STL uses operator=().
-    long_t stamp_;       //<! spike's time stamp
-    double_t ps_offset_; //<! spike offset is PS sense
-    double_t weight_;    //<! spike weight
+    long stamp_;       //<! spike's time stamp
+    double ps_offset_; //<! spike offset is PS sense
+    double weight_;    //<! spike weight
   };
 
   //! entire queue, one slot per min_delay block within max_delay
@@ -156,7 +156,7 @@ private:
 
 inline void
 SliceRingBufferNew::add_spike( const delay rel_delivery,
-  const long_t stamp,
+  const long stamp,
   const double ps_offset,
   const double weight )
 {
@@ -169,18 +169,17 @@ SliceRingBufferNew::add_spike( const delay rel_delivery,
 }
 
 inline void
-SliceRingBufferNew::set_refractory( const long_t stamp,
-  const double_t ps_offset )
+SliceRingBufferNew::set_refractory( const long stamp, const double ps_offset )
 {
   refract_ = SpikeInfo( stamp, ps_offset, 0. );
 }
 
 inline void
-SliceRingBufferNew::get_next_event( const long_t req_stamp,
-  double_t& ps_offset,
+SliceRingBufferNew::get_next_event( const long req_stamp,
+  double& ps_offset,
   double& weight_in,
   double& weight_ex,
-  const double_t step_ )
+  const double step_ )
 {
   // accumulate weights of all spikes with same stamp AND offset
   // weight_in accumulates absolute weights of inhibitory
@@ -188,7 +187,7 @@ SliceRingBufferNew::get_next_event( const long_t req_stamp,
   // they are not set to zero because get_next_event might be applied several
   // times in case interpolation occurs before the spike reception occurs
   // (see for instance aeif_cond_alpha_ps::update)
-  // refract_.stamp_==long_t::max() if neuron is not refractory
+  // refract_.stamp_==long::max() if neuron is not refractory
 
 
   if ( deliver_->empty() )
@@ -198,7 +197,7 @@ SliceRingBufferNew::get_next_event( const long_t req_stamp,
       // set return from refractoriness
       ps_offset = step_ - refract_.ps_offset_;
       // mark as non-refractory
-      refract_.stamp_ = std::numeric_limits< long_t >::max();
+      refract_.stamp_ = std::numeric_limits< long >::max();
     }
     else
       ps_offset = step_;
@@ -211,7 +210,7 @@ SliceRingBufferNew::get_next_event( const long_t req_stamp,
     if ( refract_.stamp_ == req_stamp && refract_.ps_offset_ > ps_offset_tmp )
     {
       ps_offset = step_ - refract_.ps_offset_;
-      refract_.stamp_ = std::numeric_limits< long_t >::max();
+      refract_.stamp_ = std::numeric_limits< long >::max();
     }
     else
     {
@@ -236,34 +235,36 @@ SliceRingBufferNew::get_next_event( const long_t req_stamp,
     if ( refract_.stamp_ == req_stamp )
     {
       ps_offset = step_ - refract_.ps_offset_;
-      refract_.stamp_ = std::numeric_limits< long_t >::max();
+      refract_.stamp_ = std::numeric_limits< long >::max();
     }
     else
       ps_offset = step_;
   }
 }
 
-inline SliceRingBufferNew::SpikeInfo::SpikeInfo( long_t stamp,
-  double_t ps_offset,
-  double_t weight )
+inline SliceRingBufferNew::SpikeInfo::SpikeInfo( long stamp,
+  double ps_offset,
+  double weight )
   : stamp_( stamp )
   , ps_offset_( ps_offset )
   , weight_( weight )
 {
 }
 
-inline bool SliceRingBufferNew::SpikeInfo::operator<( const SpikeInfo& b ) const
+inline bool
+SliceRingBufferNew::SpikeInfo::operator<( const SpikeInfo& b ) const
 {
   return stamp_ == b.stamp_ ? ps_offset_ > b.ps_offset_ : stamp_ < b.stamp_;
 }
 
-inline bool SliceRingBufferNew::SpikeInfo::operator<=(
-  const SpikeInfo& b ) const
+inline bool
+SliceRingBufferNew::SpikeInfo::operator<=( const SpikeInfo& b ) const
 {
   return !( *this > b );
 }
 
-inline bool SliceRingBufferNew::SpikeInfo::operator>( const SpikeInfo& b ) const
+inline bool
+SliceRingBufferNew::SpikeInfo::operator>( const SpikeInfo& b ) const
 {
   return stamp_ == b.stamp_ ? ps_offset_ < b.ps_offset_ : stamp_ > b.stamp_;
 }

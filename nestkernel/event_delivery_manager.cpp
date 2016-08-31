@@ -212,8 +212,10 @@ EventDeliveryManager::init_moduli()
   slice_moduli_.resize( min_delay + max_delay );
   for ( delay d = 0; d < min_delay + max_delay; ++d )
   {
-    slice_moduli_[ d ] = ( ( kernel().simulation_manager.get_clock().get_steps()
-                             + d ) / min_delay ) % nbuff;
+    slice_moduli_[ d ] =
+      ( ( kernel().simulation_manager.get_clock().get_steps() + d )
+        / min_delay )
+      % nbuff;
   }
 }
 
@@ -248,8 +250,10 @@ EventDeliveryManager::update_moduli()
     std::ceil( static_cast< double >( min_delay + max_delay ) / min_delay ) );
   for ( delay d = 0; d < min_delay + max_delay; ++d )
   {
-    slice_moduli_[ d ] = ( ( kernel().simulation_manager.get_clock().get_steps()
-                             + d ) / min_delay ) % nbuff;
+    slice_moduli_[ d ] =
+      ( ( kernel().simulation_manager.get_clock().get_steps() + d )
+        / min_delay )
+      % nbuff;
   }
 }
 

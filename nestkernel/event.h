@@ -24,9 +24,9 @@
 #define EVENT_H
 
 // C++ includes:
+#include <algorithm>
 #include <cassert>
 #include <cstring>
-#include <algorithm>
 #include <vector>
 
 // Includes from libnestutil:
@@ -917,8 +917,8 @@ public:
    * The following operator is used to read the information
    * of the GapJunctionEvent from the buffer in Scheduler::deliver_events_
    */
-  std::vector< unsigned int >::iterator& operator<<(
-    std::vector< unsigned int >::iterator& pos )
+  std::vector< unsigned int >::iterator&
+  operator<<( std::vector< unsigned int >::iterator& pos )
   {
     // The synid can be skipped here as it is stored in a static vector
     pos += number_of_uints_covered< synindex >();
@@ -941,8 +941,8 @@ public:
    * All GapJunctionEvents are identified by the synid of the
    * first element in supported_syn_ids_
    */
-  std::vector< unsigned int >::iterator& operator>>(
-    std::vector< unsigned int >::iterator& pos )
+  std::vector< unsigned int >::iterator&
+  operator>>( std::vector< unsigned int >::iterator& pos )
   {
     write_to_comm_buffer( *( supported_syn_ids_.begin() ), pos );
     write_to_comm_buffer( sender_gid_, pos );

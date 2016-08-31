@@ -93,24 +93,27 @@ nest::aeif_psc_exp_gp_dynamics( double,
   // good compiler will optimize the verbosity away ...
 
   // shorthand for state variables
-  const double_t& V = y[ S::V_M ];
-  const double_t& I_exc = y[ S::I_EXC ];
-  const double_t& I_in = y[ S::I_INH ];
-  const double_t& w = y[ S::W ];
+  const double& V = y[ S::V_M ];
+  const double& I_exc = y[ S::I_EXC ];
+  const double& I_in = y[ S::I_INH ];
+  const double& w = y[ S::W ];
 
   // We pre-compute the argument of the exponential
-  const double_t exp_arg = ( V - node.P_.V_th ) / node.P_.Delta_T;
+  const double exp_arg = ( V - node.P_.V_th ) / node.P_.Delta_T;
 
   // Upper bound for exponential argument to avoid numerical instabilities
-  const double_t MAX_EXP_ARG = 10.;
+  const double MAX_EXP_ARG = 10.;
 
   // If the argument is too large, we clip it.
-  const double_t I_spike =
+  const double I_spike =
     node.P_.Delta_T * std::exp( std::min( exp_arg, MAX_EXP_ARG ) );
 
   // dv/dt
-  f[ S::V_M ] = ( -node.P_.g_L * ( ( V - node.P_.E_L ) - I_spike ) + I_exc
-                  - I_in - w + node.P_.I_e + node.B_.I_stim_ ) / node.P_.C_m;
+  f[ S::V_M ] =
+    ( -node.P_.g_L * ( ( V - node.P_.E_L ) - I_spike ) + I_exc - I_in - w
+      + node.P_.I_e
+      + node.B_.I_stim_ )
+    / node.P_.C_m;
 
   f[ S::I_EXC ] = -I_exc / node.P_.tau_syn_ex; // Synaptic Conductance (nS)
 
@@ -162,8 +165,8 @@ nest::aeif_psc_exp_gp::State_::State_( const State_& s )
     y_[ i ] = s.y_[ i ];
 }
 
-nest::aeif_psc_exp_gp::State_& nest::aeif_psc_exp_gp::State_::operator=(
-  const State_& s )
+nest::aeif_psc_exp_gp::State_&
+nest::aeif_psc_exp_gp::State_::operator=( const State_& s )
 {
   assert( this != &s ); // would be bad logical error in program
 
@@ -408,7 +411,7 @@ nest::aeif_psc_exp_gp::interpolate_( double& t, double t_old )
 
 void
 nest::aeif_psc_exp_gp::spiking_( Time const& origin,
-  const long_t lag,
+  const long lag,
   const double t )
 {
   // spike event
@@ -436,8 +439,8 @@ nest::aeif_psc_exp_gp::spiking_( Time const& origin,
 
 void
 nest::aeif_psc_exp_gp::update( const Time& origin,
-  const nest::long_t from,
-  const nest::long_t to )
+  const long from,
+  const long to )
 {
   assert(
     to >= 0 && ( delay ) from < kernel().connection_manager.get_min_delay() );
@@ -459,7 +462,7 @@ nest::aeif_psc_exp_gp::update( const Time& origin,
     kernel().event_delivery_manager.send( *this, se, from );
   }
 
-  for ( long_t lag = from; lag < to; ++lag )
+  for ( long lag = from; lag < to; ++lag )
   {
     t = 0.;
 
@@ -559,8 +562,8 @@ nest::aeif_psc_exp_gp::handle( CurrentEvent& e )
 {
   assert( e.get_delay() > 0 );
 
-  const double_t c = e.get_current();
-  const double_t w = e.get_weight();
+  const double c = e.get_current();
+  const double w = e.get_weight();
 
   // add weighted current; HEP 2002-10-04
   B_.currents_.add_value(

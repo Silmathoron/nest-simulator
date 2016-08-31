@@ -84,11 +84,13 @@ protected:
     {
       return Position< D >( pos_ );
     }
-    bool operator<( const NodePositionData& other ) const
+    bool
+    operator<( const NodePositionData& other ) const
     {
       return gid_ < other.gid_;
     }
-    bool operator==( const NodePositionData& other ) const
+    bool
+    operator==( const NodePositionData& other ) const
     {
       return gid_ == other.gid_;
     }
@@ -224,8 +226,9 @@ FreeLayer< D >::communicate_positions_( Ins iter, const Selector& filter )
     local_gid_pos.push_back( ( *node_it )->get_gid() );
     // Push coordinates one by one
     for ( int j = 0; j < D; ++j )
-      local_gid_pos.push_back( positions_[ ( *node_it )->get_subnet_index()
-        % positions_.size() ][ j ] );
+      local_gid_pos.push_back(
+        positions_[ ( *node_it )->get_subnet_index() % positions_.size() ]
+                  [ j ] );
   }
 
   // This array will be filled with GID,pos_x,pos_y[,pos_z] for global nodes:

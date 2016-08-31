@@ -81,8 +81,8 @@
 */
 
 // C-header for math.h since copysign() is in C99 but not C++98
-#include <math.h>
 #include "connection.h"
+#include <math.h>
 
 namespace nest
 {

@@ -27,18 +27,18 @@
 #include <limits>
 
 nest::SliceRingBufferNew::SliceRingBufferNew()
-  : refract_( std::numeric_limits< long_t >::max(), 0, 0 )
+  : refract_( std::numeric_limits< long >::max(), 0, 0 )
 {
 }
 
 void
 nest::SliceRingBufferNew::resize()
 {
-  long_t newsize = static_cast< long_t >( std::ceil(
+  long newsize = static_cast< long >( std::ceil(
     static_cast< double >( kernel().connection_manager.get_min_delay()
       + kernel().connection_manager.get_max_delay() )
     / kernel().connection_manager.get_min_delay() ) );
-  if ( queue_.size() != static_cast< ulong_t >( newsize ) )
+  if ( queue_.size() != static_cast< ulong >( newsize ) )
   {
     queue_.resize( newsize );
     clear();

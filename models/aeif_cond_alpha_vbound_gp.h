@@ -1,5 +1,5 @@
 /*
- *  aeif_cond_exp_gp.h
+ *  aeif_cond_alpha_vbound_gp.h
  *
  *  This file is part of NEST.
  *
@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef AEIF_COND_EXP_GP_H
-#define AEIF_COND_EXP_GP_H
+#ifndef AEIF_COND_ALPHA_VBOUND_GP_H
+#define AEIF_COND_ALPHA_VBOUND_GP_H
 
 // Generated includes:
 #include "config.h"
@@ -43,10 +43,11 @@
 #include "universal_data_logger.h"
 
 /* BeginDocumentation
-Name: aeif_cond_exp_gp - Conductance based exponential integrate-and-
-  fire neuron model according to Brette and Gerstner (2005), implementing a
-  linear interpolation to find the precise time where the threshold was
-  crossed, i.e. the spiking time.
+Name: aeif_cond_alpha_vbound_gp - Conductance based exponential
+integrate-and-fire
+  neuron model according to Brette and Gerstner (2005), implementing a linear
+  interpolation to find the "exact" time where the threshold was crossed, i.e.
+  the spiking time.
 
 Description:
 aeif_cond_alpha is the adaptive exponential integrate and fire neuron according
@@ -95,13 +96,11 @@ Spike adaptation parameters:
 
 Synaptic parameters
   E_ex       double - Excitatory reversal potential in mV.
-  tau_syn_ex double - Characteristic decrease time of excitatory synaptic
-conductance in ms
-(exponential function).
+  tau_syn_ex double - Rise time of excitatory synaptic conductance in ms (alpha
+function).
   E_in       double - Inhibitory reversal potential in mV.
-  tau_syn_in double - Characteristic decrease time of inhibitory synaptic
-conductance in ms
-(exponential function).
+  tau_syn_in double - Rise time of the inhibitory synaptic conductance in ms
+(alpha function).
 
 Integration parameters
   gsl_error_tol  double - This parameter controls the admissible error of the
@@ -119,13 +118,13 @@ References: Brette R and Gerstner W (2005) Adaptive Exponential Integrate-and-
   Fire Model as an Effective Description of Neuronal Activity.
   J Neurophysiol 94:3637-3642
 
-SeeAlso: iaf_cond_alpha, aeif_cond_exp, aeif_cond_alpha_gridprecise,
+SeeAlso: iaf_cond_alpha, aeif_cond_exp, aeif_cond_alpha
 */
 
 namespace nest
 {
 /**
- * Function computing right-hand side of ODE for GSL solver.
+ * Function computing right-hand side of ODE for GSL solver if Delta_T != 0.
  * @note Must be declared here so we can befriend it in class.
  * @note Must have C-linkage for passing to GSL. Internally, it is
  *       a first-class C++ function, but cannot be a member function
@@ -135,15 +134,28 @@ namespace nest
  * @param void* Pointer to model neuron instance.
  */
 extern "C" int
-aeif_cond_exp_gp_dynamics( double, const double*, double*, void* );
+aeif_cond_alpha_vbound_gp_dynamics( double, const double*, double*, void* );
 
-class aeif_cond_exp_gp : public Archiving_Node
+/**
+ * Function computing right-hand side of ODE for GSL solver if Delta_T == 0.
+ * @note Must be declared here so we can befriend it in class.
+ * @note Must have C-linkage for passing to GSL. Internally, it is
+ *       a first-class C++ function, but cannot be a member function
+ *       because of the C-linkage.
+ * @note No point in declaring it inline, since it is called
+ *       through a function pointer.
+ * @param void* Pointer to model neuron instance.
+ */
+extern "C" int
+aeif_cond_alpha_vbound_gp_dynamics_DT0( double, const double*, double*, void* );
+
+class aeif_cond_alpha_vbound_gp : public Archiving_Node
 {
 
 public:
-  aeif_cond_exp_gp();
-  aeif_cond_exp_gp( const aeif_cond_exp_gp& );
-  ~aeif_cond_exp_gp();
+  aeif_cond_alpha_vbound_gp();
+  aeif_cond_alpha_vbound_gp( const aeif_cond_alpha_vbound_gp& );
+  ~aeif_cond_alpha_vbound_gp();
 
   /**
    * Import sets of overloaded virtual functions.
@@ -179,11 +191,16 @@ private:
   // Friends --------------------------------------------------------
 
   // make dynamics function quasi-member
-  friend int aeif_cond_exp_gp_dynamics( double, const double*, double*, void* );
+  friend int
+  aeif_cond_alpha_vbound_gp_dynamics( double, const double*, double*, void* );
+  friend int aeif_cond_alpha_vbound_gp_dynamics_DT0( double,
+    const double*,
+    double*,
+    void* );
 
   // The next two classes need to be friends to access the State_ class/member
-  friend class RecordablesMap< aeif_cond_exp_gp >;
-  friend class UniversalDataLogger< aeif_cond_exp_gp >;
+  friend class RecordablesMap< aeif_cond_alpha_vbound_gp >;
+  friend class UniversalDataLogger< aeif_cond_alpha_vbound_gp >;
 
 private:
   // ----------------------------------------------------------------
@@ -237,9 +254,11 @@ public:
     enum StateVecElems
     {
       V_M = 0,
-      G_EXC, // 1
-      G_INH, // 2
-      W,     // 3
+      DG_EXC, // 1
+      G_EXC,  // 2
+      DG_INH, // 3
+      G_INH,  // 4
+      W,      // 5
       STATE_VEC_SIZE
     };
 
@@ -266,12 +285,12 @@ public:
    */
   struct Buffers_
   {
-    Buffers_( aeif_cond_exp_gp& ); //!<Sets buffer pointers to 0
+    Buffers_( aeif_cond_alpha_vbound_gp& ); //!<Sets buffer pointers to 0
     Buffers_( const Buffers_&,
-      aeif_cond_exp_gp& ); //!<Sets buffer pointers to 0
+      aeif_cond_alpha_vbound_gp& ); //!<Sets buffer pointers to 0
 
     //! Logger for all analog data
-    UniversalDataLogger< aeif_cond_exp_gp > logger_;
+    UniversalDataLogger< aeif_cond_alpha_vbound_gp > logger_;
 
     /** buffers and sums up incoming spikes/currents */
     RingBuffer spike_exc_;
@@ -282,7 +301,6 @@ public:
     gsl_odeiv_step* s_;    //!< stepping function
     gsl_odeiv_control* c_; //!< adaptive stepsize control function
     gsl_odeiv_evolve* e_;  //!< evolution function
-    gsl_odeiv_system sys_; //!< struct describing system
 
     // IntergrationStep_ should be reset with the neuron on ResetNetwork,
     // but remain unchanged during calibration. Since it is initialized with
@@ -308,8 +326,18 @@ public:
    */
   struct Variables_
   {
+    /** initial value to normalise excitatory synaptic conductance */
+    double g0_ex_;
+
+    /** initial value to normalise inhibitory synaptic conductance */
+    double g0_in_;
+
     unsigned int RefractoryCounts_;
     double RefractoryOffset_;
+
+    // specificity of the aEIF model: gsl system is moved here for easy update
+    // if Delta_T is set to (non)zero values
+    gsl_odeiv_system sys_; //!< struct describing system
   };
 
   // Access functions for UniversalDataLogger -------------------------------
@@ -330,11 +358,11 @@ public:
   Buffers_ B_;
 
   //! Mapping of recordables names to access functions
-  static RecordablesMap< aeif_cond_exp_gp > recordablesMap_;
+  static RecordablesMap< aeif_cond_alpha_vbound_gp > recordablesMap_;
 };
 
 inline port
-aeif_cond_exp_gp::send_test_event( Node& target,
+aeif_cond_alpha_vbound_gp::send_test_event( Node& target,
   rport receptor_type,
   synindex,
   bool )
@@ -346,7 +374,8 @@ aeif_cond_exp_gp::send_test_event( Node& target,
 }
 
 inline port
-aeif_cond_exp_gp::handles_test_event( SpikeEvent&, rport receptor_type )
+aeif_cond_alpha_vbound_gp::handles_test_event( SpikeEvent&,
+  rport receptor_type )
 {
   if ( receptor_type != 0 )
     throw UnknownReceptorType( receptor_type, get_name() );
@@ -354,7 +383,8 @@ aeif_cond_exp_gp::handles_test_event( SpikeEvent&, rport receptor_type )
 }
 
 inline port
-aeif_cond_exp_gp::handles_test_event( CurrentEvent&, rport receptor_type )
+aeif_cond_alpha_vbound_gp::handles_test_event( CurrentEvent&,
+  rport receptor_type )
 {
   if ( receptor_type != 0 )
     throw UnknownReceptorType( receptor_type, get_name() );
@@ -362,7 +392,7 @@ aeif_cond_exp_gp::handles_test_event( CurrentEvent&, rport receptor_type )
 }
 
 inline port
-aeif_cond_exp_gp::handles_test_event( DataLoggingRequest& dlr,
+aeif_cond_alpha_vbound_gp::handles_test_event( DataLoggingRequest& dlr,
   rport receptor_type )
 {
   if ( receptor_type != 0 )
@@ -371,7 +401,7 @@ aeif_cond_exp_gp::handles_test_event( DataLoggingRequest& dlr,
 }
 
 inline void
-aeif_cond_exp_gp::get_status( DictionaryDatum& d ) const
+aeif_cond_alpha_vbound_gp::get_status( DictionaryDatum& d ) const
 {
   P_.get( d );
   S_.get( d );
@@ -381,7 +411,7 @@ aeif_cond_exp_gp::get_status( DictionaryDatum& d ) const
 }
 
 inline void
-aeif_cond_exp_gp::set_status( const DictionaryDatum& d )
+aeif_cond_alpha_vbound_gp::set_status( const DictionaryDatum& d )
 {
   Parameters_ ptmp = P_; // temporary copy in case of errors
   ptmp.set( d );         // throws if BadProperty
@@ -402,4 +432,4 @@ aeif_cond_exp_gp::set_status( const DictionaryDatum& d )
 } // namespace
 
 #endif // HAVE_GSL
-#endif // AEIF_COND_EXP_GP_H
+#endif // AEIF_COND_ALPHA_VBOUND_GP_H

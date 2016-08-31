@@ -356,11 +356,13 @@ public:
     {
       return vp_;
     }
-    bool operator<( const NodeAddressingData& other ) const
+    bool
+    operator<( const NodeAddressingData& other ) const
     {
       return this->gid_ < other.gid_;
     }
-    bool operator==( const NodeAddressingData& other ) const
+    bool
+    operator==( const NodeAddressingData& other ) const
     {
       return this->gid_ == other.gid_;
     }
