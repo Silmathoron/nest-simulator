@@ -87,8 +87,7 @@ nest::aeif_cond_alpha_dynamics( double,
   const nest::aeif_cond_alpha& node =
     *( reinterpret_cast< nest::aeif_cond_alpha* >( pnode ) );
 
-  const bool is_refractory =
-    ( node.S_.r_ > 0 && node.S_.r_ <= node.V_.refractory_counts_ );
+  const bool is_refractory = node.S_.r_ > 0;
 
   // y[] here is---and must be---the state vector supplied by the integrator,
   // not the state vector in the node, node.S_.y[].
@@ -495,7 +494,7 @@ nest::aeif_cond_alpha::update( Time const& origin,
 
       // spikes are handled inside the while-loop
       // due to spike-driven adaptation
-      if ( S_.r_ > 0 && S_.r_ <= V_.refractory_counts_ )
+      if ( S_.r_ > 0 )
       {
         S_.y_[ State_::V_M ] = P_.V_reset_;
       }
@@ -504,9 +503,13 @@ nest::aeif_cond_alpha::update( Time const& origin,
         S_.y_[ State_::V_M ] = P_.V_reset_;
         S_.y_[ State_::W ] += P_.b; // spike-driven adaptation
 
-        // initialize refractory steps, adding 1 to compensate for immediate
-        // subtraction after the while loop
-        S_.r_ = V_.refractory_counts_ + 1;
+        /* Initialize refractory step counter.
+         * - We need to add 1 to compensate for count-down immediately after
+         *   while loop.
+         * - If neuron has no refractory time, set to 0 to avoid refractory
+         *   artifact inside while loop.
+         */
+        S_.r_ = V_.refractory_counts_ > 0 ? V_.refractory_counts_ + 1 : 0;
 
         set_spiketime( Time::step( origin.get_steps() + lag + 1 ) );
         SpikeEvent se;
