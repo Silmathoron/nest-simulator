@@ -49,6 +49,7 @@
 #include "aeif_cond_alpha_RK5.h"
 #include "aeif_cond_exp.h"
 #include "aeif_psc_alpha.h"
+#include "aeif_psc_alpha_fast.h"
 #include "aeif_psc_exp.h"
 #include "amat2_psc_exp.h"
 #include "ginzburg_neuron.h"
@@ -367,6 +368,8 @@ ModelsModule::init( SLIInterpreter* )
     "aeif_cond_exp" );
   kernel().model_manager.register_node_model< aeif_psc_alpha >(
     "aeif_psc_alpha" );
+  kernel().model_manager.register_node_model< aeif_psc_alpha_fast >(
+    "aeif_psc_alpha_fast" );
   kernel().model_manager.register_node_model< aeif_psc_exp >( "aeif_psc_exp" );
   kernel().model_manager.register_node_model< ht_neuron >( "ht_neuron" );
   kernel().model_manager.register_node_model< aeif_cond_beta_multisynapse >(
