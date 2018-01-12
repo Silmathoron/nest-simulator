@@ -126,6 +126,15 @@ namespace nest
  */
 extern "C" int aeif_psc_alpha_fast_dynamics( double, const double*, double*, void* );
 
+inline
+double exp2(double x) {
+  x = 1.0 + x / 1024.0;
+  x *= x; x *= x; x *= x; x *= x;
+  x *= x; x *= x; x *= x; x *= x;
+  x *= x; x *= x;
+  return x;
+}
+
 class aeif_psc_alpha_fast : public Archiving_Node
 {
 
@@ -184,15 +193,20 @@ private:
 
     double g_L;     //!< Leak Conductance in nS
     double C_m;     //!< Membrane Capacitance in pF
+    double inv_Cm;  //!< Membrane Capacitance in pF
     double E_L;     //!< Leak reversal Potential (aka resting potential) in mV
     double Delta_T; //!< Slope faktor in ms.
+    double inv_DT;  //!< inv Slope faktor in ms.
     double tau_w;   //!< adaptation time-constant in ms.
+    double inv_tw;   //!< adaptation time-constant in ms.
     double a;       //!< Subthreshold adaptation in nS.
     double b;       //!< Spike-triggered adaptation in pA
     double V_th;    //!< Spike threshold in mV.
     double t_ref;   //!< Refractory period in ms.
     double tau_syn_ex; //!< Excitatory synaptic rise time.
+    double inv_tse; //!< Excitatory synaptic rise time.
     double tau_syn_in; //!< Excitatory synaptic rise time.
+    double inv_tsi; //!< Excitatory synaptic rise time.
     double I_e;        //!< Intrinsic current in pA.
 
     double gsl_error_tol; //!< error bound for GSL integrator

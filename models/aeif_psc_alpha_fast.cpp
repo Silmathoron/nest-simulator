@@ -107,37 +107,27 @@ nest::aeif_psc_alpha_fast_dynamics( double,
   const double& I_syn_in = y[ S::I_INH ];
   const double& w = y[ S::W ];
 
-  double I_spike = 0.;
-
-  if (node.P_.Delta_T != 0.)
-  {
-    if (V > node.P_.V_th)
-    {
-       I_spike = node.P_.g_L * node.P_.Delta_T
-                 * std::exp( ( V - node.P_.V_th ) / node.P_.Delta_T );
-    }
-    else if (V > node.P_.V_th - node.P_.Delta_T)
-    {
-        I_spike = node.P_.g_L * ( V - node.P_.V_th + node.P_.Delta_T );
-    }
-  }
+  const double I_spike = node.P_.Delta_T == 0.
+    ? 0.
+    : ( node.P_.g_L * node.P_.Delta_T
+        * exp2( ( V - node.P_.V_th ) * node.P_.inv_DT ) );
 
   // dv/dt
   f[ S::V_M ] = is_refractory
     ? 0.
     : ( -node.P_.g_L * ( V - node.P_.E_L ) + I_spike + I_syn_ex - I_syn_in - w
-        + node.P_.I_e + node.B_.I_stim_ ) / node.P_.C_m;
+        + node.P_.I_e + node.B_.I_stim_ ) * node.P_.inv_Cm;
 
-  f[ S::DI_EXC ] = -dI_syn_ex / node.P_.tau_syn_ex;
+  f[ S::DI_EXC ] = -dI_syn_ex * node.P_.inv_tse;
   // Exc. synaptic current (pA)
-  f[ S::I_EXC ] = dI_syn_ex - I_syn_ex / node.P_.tau_syn_ex;
+  f[ S::I_EXC ] = dI_syn_ex - I_syn_ex * node.P_.inv_tse;
 
-  f[ S::DI_INH ] = -dI_syn_in / node.P_.tau_syn_in;
+  f[ S::DI_INH ] = -dI_syn_in * node.P_.inv_tsi;
   // Inh. synaptic current (pA)
-  f[ S::I_INH ] = dI_syn_in - I_syn_in / node.P_.tau_syn_in;
+  f[ S::I_INH ] = dI_syn_in - I_syn_in * node.P_.inv_tsi;
 
   // Adaptation current w.
-  f[ S::W ] = ( node.P_.a * ( V - node.P_.E_L ) - w ) / node.P_.tau_w;
+  f[ S::W ] = ( node.P_.a * ( V - node.P_.E_L ) - w ) * node.P_.inv_tw;
 
   return GSL_SUCCESS;
 }
@@ -163,6 +153,11 @@ nest::aeif_psc_alpha_fast::Parameters_::Parameters_()
   , I_e( 0.0 )        // pA
   , gsl_error_tol( 1e-6 )
 {
+  inv_DT = Delta_T == 0. ? 0. : 1. / Delta_T;
+  inv_tse = 1. / tau_syn_ex;
+  inv_tsi = 1. / tau_syn_in;
+  inv_Cm  = 1. / C_m;
+  inv_tw  = 1. / tau_w;
 }
 
 nest::aeif_psc_alpha_fast::State_::State_( const Parameters_& p )
@@ -293,6 +288,12 @@ nest::aeif_psc_alpha_fast::Parameters_::set( const DictionaryDatum& d )
   {
     throw BadProperty( "The gsl_error_tol must be strictly positive." );
   }
+
+  inv_DT  = Delta_T == 0. ? 0. : 1. / Delta_T;
+  inv_tse = 1. / tau_syn_ex;
+  inv_tsi = 1. / tau_syn_in;
+  inv_Cm  = 1. / C_m;
+  inv_tw  = 1. / tau_w;
 }
 
 void
