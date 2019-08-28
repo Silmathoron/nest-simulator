@@ -89,6 +89,7 @@ set( models_sources
     ppd_sup_generator.h ppd_sup_generator.cpp
     pulsepacket_generator.h pulsepacket_generator.cpp
     quantal_stp_connection.h quantal_stp_connection_impl.h
+    ramp_current_generator.h ramp_current_generator.cpp
     rate_connection_delayed.h
     rate_connection_instantaneous.h
     rate_neuron_opn.h rate_neuron_opn_impl.h

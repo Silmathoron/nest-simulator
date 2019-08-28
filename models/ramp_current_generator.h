@@ -184,8 +184,8 @@ private:
   struct Buffers_
   {
     size_t idx_;   //!< index of current amplitude
-    double amp_;   //!< current initial amplitude
     long stp_;     //!< step associated to initial amplitude
+    double amp_;   //!< current initial amplitude
     double slope_; //!< current slope value (pA/step)
 
     Buffers_( ramp_current_generator& );

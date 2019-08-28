@@ -103,6 +103,7 @@
 #include "inhomogeneous_poisson_generator.h"
 #include "ppd_sup_generator.h"
 #include "pulsepacket_generator.h"
+#include "ramp_current_generator.h"
 #include "sinusoidal_gamma_generator.h"
 #include "sinusoidal_poisson_generator.h"
 #include "spike_generator.h"
@@ -239,6 +240,7 @@ ModelsModule::init( SLIInterpreter* )
   kernel().model_manager.register_node_model< poisson_generator >( "poisson_generator" );
   kernel().model_manager.register_node_model< pulsepacket_generator >( "pulsepacket_generator" );
   kernel().model_manager.register_node_model< noise_generator >( "noise_generator" );
+  kernel().model_manager.register_node_model< ramp_current_generator >( "ramp_current_generator" );
   kernel().model_manager.register_node_model< step_current_generator >( "step_current_generator" );
   kernel().model_manager.register_node_model< step_rate_generator >( "step_rate_generator" );
   kernel().model_manager.register_node_model< mip_generator >( "mip_generator" );

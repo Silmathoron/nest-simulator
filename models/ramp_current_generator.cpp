@@ -292,20 +292,20 @@ nest::ramp_current_generator::update( Time const& origin, const long from, const
         B_.amp_   = P_.amp_values_[ B_.idx_ ];
         B_.stp_   = P_.amp_time_stamps_[ B_.idx_ ].get_steps();
         B_.slope_ = (P_.amp_values_[ B_.idx_ + 1] - P_.amp_values_[ B_.idx_ ])
-                    / (P_.amp_time_stamps_[ B_.idx_ + 1] - P_.amp_time_stamps_[ B_.idx_ ]);
+                    / (P_.amp_time_stamps_[ B_.idx_ + 1].get_steps() - P_.amp_time_stamps_[ B_.idx_ ].get_steps());
       }
       else if ( B_.idx_ > 1)
       {
         B_.amp_   = P_.amp_values_[ B_.idx_ - 1 ];
         B_.stp_   = P_.amp_time_stamps_[ B_.idx_ - 1 ].get_steps();
         B_.slope_ = (P_.amp_values_[ B_.idx_ ] - P_.amp_values_[ B_.idx_ - 1 ])
-                    / (P_.amp_time_stamps_[ B_.idx_ ] - P_.amp_time_stamps_[ B_.idx_ - 1 ]);
+                    / (P_.amp_time_stamps_[ B_.idx_ ].get_steps() - P_.amp_time_stamps_[ B_.idx_ - 1 ].get_steps());
       }
       else
       {
         B_.amp_   = 0.;
         B_.stp_   = 0;
-        B_.slope_ = P_.amp_values_[ B_.idx_ ] / P_.amp_time_stamps_[ B_.idx_ ];
+        B_.slope_ = P_.amp_values_[ B_.idx_ ] / P_.amp_time_stamps_[ B_.idx_ ].get_steps();
       }
       B_.idx_++;
     }
@@ -313,7 +313,7 @@ nest::ramp_current_generator::update( Time const& origin, const long from, const
     // but send only if active
     if ( device_.is_active( Time::step( curr_time ) ) )
     {
-      double instantaneous_current = B_.amp_ + B_.slope_*(curr_time - B_.stp_);
+      double instantaneous_current = B_.amp_ + B_.slope_*(curr_time - B_.stp_ + 1);
       CurrentEvent ce;
       ce.set_current( instantaneous_current );
       S_.I_ = instantaneous_current;
