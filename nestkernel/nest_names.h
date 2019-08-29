@@ -180,6 +180,8 @@ extern const Name filenames;
 extern const Name flush_after_simulate;
 extern const Name flush_records;
 extern const Name frequency;
+extern const Name frequency_times;
+extern const Name frequency_values;
 extern const Name frozen;
 
 extern const Name g;
@@ -330,6 +332,8 @@ extern const Name p_copy;
 extern const Name p_transmit;
 extern const Name parent;
 extern const Name phase;
+extern const Name phase_times;
+extern const Name phase_values;
 extern const Name port;
 extern const Name port_name;
 extern const Name port_width;

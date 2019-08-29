@@ -104,6 +104,7 @@
 #include "ppd_sup_generator.h"
 #include "pulsepacket_generator.h"
 #include "ramp_current_generator.h"
+#include "sinusoidal_current_generator.h"
 #include "sinusoidal_gamma_generator.h"
 #include "sinusoidal_poisson_generator.h"
 #include "spike_generator.h"
@@ -252,6 +253,7 @@ ModelsModule::init( SLIInterpreter* )
   kernel().model_manager.register_node_model< mcculloch_pitts_neuron >( "mcculloch_pitts_neuron" );
   kernel().model_manager.register_node_model< izhikevich >( "izhikevich" );
   kernel().model_manager.register_node_model< spike_dilutor >( "spike_dilutor" );
+  kernel().model_manager.register_node_model< sinusoidal_current_generator >( "sinusoidal_current_generator" );
 
   kernel().model_manager.register_node_model< spike_detector >( "spike_detector" );
   kernel().model_manager.register_node_model< weight_recorder >( "weight_recorder" );

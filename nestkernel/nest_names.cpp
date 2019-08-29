@@ -159,6 +159,8 @@ const Name filenames( "filenames" );
 const Name flush_after_simulate( "flush_after_simulate" );
 const Name flush_records( "flush_records" );
 const Name frequency( "frequency" );
+const Name frequency_times( "frequency_times" );
+const Name frequency_values( "frequency_values" );
 const Name frozen( "frozen" );
 
 const Name g( "g" );
@@ -309,6 +311,8 @@ const Name p_copy( "p_copy" );
 const Name p_transmit( "p_transmit" );
 const Name parent( "parent" );
 const Name phase( "phase" );
+const Name phase_times( "phase_times" );
+const Name phase_values( "phase_values" );
 const Name port( "port" );
 const Name port_name( "port_name" );
 const Name port_width( "port_width" );

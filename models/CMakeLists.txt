@@ -98,8 +98,9 @@ set( models_sources
     siegert_neuron.h siegert_neuron.cpp
     sigmoid_rate.h sigmoid_rate.cpp
     sigmoid_rate_gg_1998.h sigmoid_rate_gg_1998.cpp
-    sinusoidal_poisson_generator.h sinusoidal_poisson_generator.cpp
+    sinusoidal_current_generator.h sinusoidal_current_generator.cpp
     sinusoidal_gamma_generator.h sinusoidal_gamma_generator.cpp
+    sinusoidal_poisson_generator.h sinusoidal_poisson_generator.cpp
     spike_detector.h spike_detector.cpp
     spike_generator.h spike_generator.cpp
     spin_detector.h spin_detector.cpp

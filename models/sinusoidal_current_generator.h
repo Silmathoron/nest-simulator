@@ -1,5 +1,5 @@
 /*
- *  ramp_current_generator.h
+ *  sinusoidal_current_generator.h
  *
  *  This file is part of NEST.
  *
@@ -21,8 +21,8 @@
  */
 
 
-#ifndef RAMP_CURRENT_GENERATOR_H
-#define RAMP_CURRENT_GENERATOR_H
+#ifndef SINUSOIDAL_CURRENT_GENERATOR_H
+#define SINUSOIDAL_CURRENT_GENERATOR_H
 
 // C++ includes:
 #include <vector>
@@ -43,13 +43,15 @@ namespace nest
 @ingroup Devices
 @ingroup generator
 
-Name: ramp_current_generator - provides a ramp input current
+Name: sinusoidal_current_generator - provides a sinusoidal input current
 
 Description:
 
-The ramp_current_generator provides a ramp current input, i.e. a current which
-varies linearly over time, to the connected node(s).
-The unit of the current is pA.
+The sinusoidal_current_generator provides a sinusoidal current input, i.e. a current which
+varies as a sine of time, to the connected node(s).
+The frequency of the current can vary linearly or logarithmically with time.
+The unit of the current is pA, that of the frequency is Hz.
+Both current and frequency can be recorded by a multimeter, under the respective names "I" and "frequency".
 
 Parameters:
 
@@ -57,35 +59,32 @@ The following parameters can be set in the status dictionary:
 
 \verbatim embed:rst
 ==================== ===============  ========================================
- amplitude_times     list of ms       Times at which current changes
- amplitude_values    list of pA       Amplitudes of the current at these times
+ amplitude_times     list of ms       Times at which current amplitude changes
+ amplitude_values    list of pA       Amplitudes of the sinusoidal current
+ frequency_times     list of ms       Times at which current frequency changes
+ frequency_values    list of Hz       Frequency of the sinusoidal current
+ phase_times         list of ms       Times at which current phase changes
+ phase_values        list of real     Phase of the sinusoidal current
+ log_sweep           bool             Change frequency logarithmically
 ==================== ===============  ========================================
 \endverbatim
 
 Notes:
 
-Times of amplitude changes must be strictly increasing.
-An initial value of 0 pA at time 0 ms is always considered and, if used,
-does not need to be specified.
+Times of amplitude, frequency, and phase changes must be strictly increasing.
+An initial value of 0 pA, 0 Hz, and 0 phase at time 0 ms is always considered
+and, does not need to be specified.
+By default, ``log_sweep`` is set to ``False``.
 
 Examples:
 
-The current can be configured in the following way:
+The current can be altered in the following way:
 
-    import nest
+    /sinusoidal_current_generator Create /sc Set
+    sc << /amplitude_times [0.2 0.5] /amplitude_values [2.0 4.0] >> SetStatus
 
-    resol = 0.1
-    nest.SetKernelStatus({"resolution": resol})
-
-    nest.Create("ramp_current_generator", params={
-        "amplitude_times": [100., 100. + resol, 110., 140.],
-        "amplitude_values": [10., 0., 0., -5.],
-        "stop": 140. + resol
-    })
-
-The amplitude of the current will increases from 0 to 10 pA in 100 ms, then
-go down to zero and remain there for 10 ms, then go from 0 to -5 pA in
-30 ms before going back to zero until the end of the simulation.
+    The amplitude of the DC will be 0.0 pA in the time interval [0, 0.2),
+    2.0 pA in the interval [0.2, 0.5) and 4.0 from then on.
 
 Sends: CurrentEvent
 
@@ -94,12 +93,12 @@ Author: Tanguy Fardet
 SeeAlso: ac_generator, dc_generator, step_current_generator, Device,
 StimulatingDevice
 */
-class ramp_current_generator : public DeviceNode
+class sinusoidal_current_generator : public DeviceNode
 {
 
 public:
-  ramp_current_generator();
-  ramp_current_generator( const ramp_current_generator& );
+  sinusoidal_current_generator();
+  sinusoidal_current_generator( const sinusoidal_current_generator& );
 
   bool
   has_proxies() const
@@ -140,11 +139,17 @@ private:
    */
   struct Parameters_
   {
-    //! Times of amplitude changes
+    //! Times of amplitude, frequency, and phase changes
     std::vector< Time > amp_time_stamps_;
+    std::vector< Time > freq_time_stamps_;
+    std::vector< Time > phase_time_stamps_;
 
-    //! Amplitude values activated at given times
+    //! Amplitude, frequency, and phase values activated at given times
     std::vector< double > amp_values_;
+    std::vector< double > freq_values_;
+    std::vector< double > phase_values_;
+
+    bool log_sweep_;  //!< sweep mode ("lin" if false, "log" if true)
 
     Parameters_(); //!< Sets default parameter values
     Parameters_( const Parameters_&, Buffers_& );
@@ -162,6 +167,14 @@ private:
      * @param previous time stamp
      */
     Time validate_time_( double, const Time& );
+
+    /**
+     * Check and update the parameters of the generator
+     */
+    void check_and_update_params(
+      bool times_changed, bool values_changed, const std::vector< double > &new_times,
+      std::vector< Time > &timestamps_to_update, const std::vector< double > &new_values,
+      const std::string &name, size_t& idx );
   };
 
   // ------------------------------------------------------------
@@ -169,6 +182,7 @@ private:
   struct State_
   {
     double I_; //!< Instantaneous current value; used for recording current
+    double f_; //!< Instantaneous current value; used for recording current
 
     State_(); //!< Sets default parameter values
 
@@ -178,21 +192,27 @@ private:
   // ------------------------------------------------------------
 
   // The next two classes need to be friends to access the State_ class/member
-  friend class RecordablesMap< ramp_current_generator >;
-  friend class UniversalDataLogger< ramp_current_generator >;
+  friend class RecordablesMap< sinusoidal_current_generator >;
+  friend class UniversalDataLogger< sinusoidal_current_generator >;
 
   // ------------------------------------------------------------
 
   struct Buffers_
   {
-    size_t idx_;   //!< index of current amplitude
-    long stp_;     //!< step associated to initial amplitude
-    double amp_;   //!< current initial amplitude
-    double slope_; //!< current slope value (pA/step)
+    size_t idx_;    //!< index of current amplitude
+    long stp_;      //!< step associated to initial amplitude
+    double amp_;    //!< current initial amplitude (pA)
+    double slope_;  //!< current slope value (pA/step)
+    size_t fidx_;   //!< index of current initial frequency
+    long fstp_;     //!< step associated to current initial frequency
+    double freq_;   //!< current initial frequency (Hz)
+    double fslope_; //!< frequency slope value (Hz/step)
+    size_t pidx_;   //!< index of current phase
+    double phase_;  //!< current phase (real)
 
-    Buffers_( ramp_current_generator& );
-    Buffers_( const Buffers_&, ramp_current_generator& );
-    UniversalDataLogger< ramp_current_generator > logger_;
+    Buffers_( sinusoidal_current_generator& );
+    Buffers_( const Buffers_&, sinusoidal_current_generator& );
+    UniversalDataLogger< sinusoidal_current_generator > logger_;
   };
 
   // ------------------------------------------------------------
@@ -203,17 +223,23 @@ private:
     return S_.I_;
   }
 
+  double
+  get_f_() const
+  {
+    return S_.f_;
+  }
+
   // ------------------------------------------------------------
 
   StimulatingDevice< CurrentEvent > device_;
-  static RecordablesMap< ramp_current_generator > recordablesMap_;
+  static RecordablesMap< sinusoidal_current_generator > recordablesMap_;
   Parameters_ P_;
   State_ S_;
   Buffers_ B_;
 };
 
 inline port
-ramp_current_generator::send_test_event( Node& target, rport receptor_type, synindex syn_id, bool )
+sinusoidal_current_generator::send_test_event( Node& target, rport receptor_type, synindex syn_id, bool )
 {
   device_.enforce_single_syn_type( syn_id );
 
@@ -224,7 +250,7 @@ ramp_current_generator::send_test_event( Node& target, rport receptor_type, syni
 }
 
 inline port
-ramp_current_generator::handles_test_event( DataLoggingRequest& dlr, rport receptor_type )
+sinusoidal_current_generator::handles_test_event( DataLoggingRequest& dlr, rport receptor_type )
 {
   if ( receptor_type != 0 )
   {
@@ -234,7 +260,7 @@ ramp_current_generator::handles_test_event( DataLoggingRequest& dlr, rport recep
 }
 
 inline void
-ramp_current_generator::get_status( DictionaryDatum& d ) const
+sinusoidal_current_generator::get_status( DictionaryDatum& d ) const
 {
   P_.get( d );
   device_.get_status( d );
@@ -243,7 +269,7 @@ ramp_current_generator::get_status( DictionaryDatum& d ) const
 }
 
 inline void
-ramp_current_generator::set_status( const DictionaryDatum& d )
+sinusoidal_current_generator::set_status( const DictionaryDatum& d )
 {
   Parameters_ ptmp = P_; // temporary copy in case of errors
   ptmp.set( d, B_ );     // throws if BadProperty
@@ -259,4 +285,4 @@ ramp_current_generator::set_status( const DictionaryDatum& d )
 
 } // namespace
 
-#endif /* #ifndef ramp_current_generator_H */
+#endif /* #ifndef sinusoidal_current_generator_H */
