@@ -72,7 +72,7 @@ The following parameters can be set in the status dictionary:
 Notes:
 
 Times of amplitude, frequency, and phase changes must be strictly increasing.
-An initial value of 0 pA, 0 Hz, and 0 phase at time 0 ms is always considered
+An initial value of 0 pA, 1 Hz, and 0 phase at time 0 ms is always considered
 and, does not need to be specified.
 By default, ``log_sweep`` is set to ``False``.
 
@@ -181,8 +181,9 @@ private:
 
   struct State_
   {
-    double I_; //!< Instantaneous current value; used for recording current
-    double f_; //!< Instantaneous current value; used for recording current
+    double I_; //!< Instantaneous current value; used for recording
+    double f_; //!< Instantaneous frequency value; used for recording
+    double phase_; //<! Instantaneous phase (used internally)
 
     State_(); //!< Sets default parameter values
 

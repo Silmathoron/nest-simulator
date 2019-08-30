@@ -34,6 +34,10 @@
 #include "doubledatum.h"
 #include "integerdatum.h"
 
+// include from lbnestutil
+#include "numerics.h"
+
+
 namespace nest
 {
 RecordablesMap< sinusoidal_current_generator > sinusoidal_current_generator::recordablesMap_;
@@ -96,7 +100,8 @@ nest::sinusoidal_current_generator::Parameters_& nest::sinusoidal_current_genera
 
 nest::sinusoidal_current_generator::State_::State_()
   : I_( 0.0 ) // pA
-  , f_( 0.0 ) // Hz
+  , f_( 1.0 ) // Hz
+  , phase_( 0. ) // real
 {
 }
 
@@ -107,7 +112,7 @@ nest::sinusoidal_current_generator::Buffers_::Buffers_( sinusoidal_current_gener
   , slope_( 0.0 ) // pA/step
   , fidx_( 0 )
   , fstp_( 0 )
-  , freq_( 0. )   // Hz
+  , freq_( 1. )   // Hz
   , fslope_( 0. ) // Hz/step
   , pidx_( 0 )
   , phase_( 0. )  // real
@@ -122,7 +127,7 @@ nest::sinusoidal_current_generator::Buffers_::Buffers_( const Buffers_&, sinusoi
   , slope_( 0.0 ) // pA/step
   , fidx_( 0 )
   , fstp_( 0 )
-  , freq_( 0. )   // Hz
+  , freq_( 1. )   // Hz
   , fslope_( 0. ) // Hz/step
   , pidx_( 0 )
   , phase_( 0. )  // real
@@ -253,13 +258,42 @@ void nest::sinusoidal_current_generator::Parameters_::check_and_update_params(
 void
 nest::sinusoidal_current_generator::Parameters_::set( const DictionaryDatum& d, Buffers_& b )
 {
-  std::vector< double > new_atimes, new_ftimes, new_ptimes;
+  updateValue< bool >( d, "log_sweep", log_sweep_ );
+
+  std::vector< double > new_atimes, new_ftimes, new_ptimes, new_fvalues;
   const bool atimes_changed = updateValue< std::vector< double > >( d, names::amplitude_times, new_atimes );
   const bool avalues_changed = updateValue< std::vector< double > >( d, names::amplitude_values, amp_values_ );
   const bool ftimes_changed = updateValue< std::vector< double > >( d, names::frequency_times, new_ftimes );
-  const bool fvalues_changed = updateValue< std::vector< double > >( d, names::frequency_values, freq_values_ );
+  const bool fvalues_changed = updateValue< std::vector< double > >( d, names::frequency_values, new_fvalues );
   const bool ptimes_changed = updateValue< std::vector< double > >( d, names::phase_times, new_ptimes );
   const bool pvalues_changed = updateValue< std::vector< double > >( d, names::phase_values, phase_values_ );
+
+  // check frequencies
+  if (fvalues_changed)
+  {
+    if (log_sweep_)
+    {
+      for (double freq : new_fvalues)
+      {
+        if (freq <= 0)
+        {
+          throw nest::BadProperty( "For log sweep, frequencies must be stricly positive." );
+        }
+      }
+    }
+    else
+    {
+      for (double freq : new_fvalues)
+      {
+        if (freq < 0)
+        {
+          throw nest::BadProperty( "Frequencies cannot be negative." );
+        }
+      }
+    }
+
+    freq_values_.swap(new_fvalues);
+  }
 
   check_and_update_params(atimes_changed, avalues_changed, new_atimes, amp_time_stamps_, amp_values_, "Amplitude",
                           b.idx_);
@@ -269,8 +303,6 @@ nest::sinusoidal_current_generator::Parameters_::set( const DictionaryDatum& d, 
 
   check_and_update_params(ptimes_changed, pvalues_changed, new_ptimes, phase_time_stamps_, phase_values_, "Phase",
                           b.pidx_);
-
-  updateValue< bool >( d, "log_sweep", log_sweep_ );
 }
 
 
@@ -426,6 +458,14 @@ nest::sinusoidal_current_generator::update( Time const& origin, const long from,
     // Keep the frequency up-to-date at all times.
     // We need to change the frequency one step ahead of time, see comment
     // on class SimulatingDevice.
+
+    // IMPORTANT NOTE:
+    // for the log sweep, the naive implementation using
+    // f = expm1(log1p(f0) + (log1p(ff) - log1p(f0))*t/T )
+    // gives terrible results for lower frequencies (check Fourier transform).
+    // This is why an interative implementation using the instantaneous phase
+    // is prefered here (though the previous computation is also used inside).
+
     if ( B_.fidx_ < P_.freq_time_stamps_.size() && curr_time + 1 == P_.freq_time_stamps_[ B_.fidx_ ].get_steps() )
     {
       if (B_.fidx_ < P_.freq_time_stamps_.size() - 1)
@@ -435,8 +475,8 @@ nest::sinusoidal_current_generator::update( Time const& origin, const long from,
 
         if (P_.log_sweep_)
         {
-          B_.fslope_ = (P_.freq_values_[ B_.fidx_ + 1] - B_.freq_)
-                      / (std::exp(P_.freq_time_stamps_[ B_.fidx_ + 1].get_steps()) - std::exp(B_.fstp_));
+          B_.fslope_ = (std::log(P_.freq_values_[ B_.fidx_ + 1]) - std::log(B_.freq_))
+                      / (P_.freq_time_stamps_[ B_.fidx_ + 1].get_steps() - B_.fstp_);
         }
         else
         {
@@ -451,8 +491,8 @@ nest::sinusoidal_current_generator::update( Time const& origin, const long from,
 
         if (P_.log_sweep_)
         {
-          B_.fslope_ = (P_.freq_values_[ B_.fidx_ ] - B_.freq_)
-                      / (std::exp(P_.freq_time_stamps_[ B_.fidx_ ].get_steps()) - std::exp(B_.fstp_));
+          B_.fslope_ = (std::log(P_.freq_values_[ B_.fidx_ ]) - std::log(B_.freq_))
+                      / (P_.freq_time_stamps_[ B_.fidx_ ].get_steps() - B_.fstp_);
         }
         else
         {
@@ -467,7 +507,7 @@ nest::sinusoidal_current_generator::update( Time const& origin, const long from,
 
         if (P_.log_sweep_)
         {
-          B_.fslope_ = P_.freq_values_[ B_.fidx_ ] / std::exp(P_.freq_time_stamps_[ B_.fidx_ ].get_steps());
+          B_.fslope_ = std::log(P_.freq_values_[ B_.fidx_ ]) / P_.freq_time_stamps_[ B_.fidx_ ].get_steps();
         }
         else
         {
@@ -496,11 +536,16 @@ nest::sinusoidal_current_generator::update( Time const& origin, const long from,
       double amplitude = B_.amp_ + B_.slope_*(curr_time - B_.stp_ + 1);
 
       double frequency = P_.log_sweep_
-        ? B_.freq_ + B_.fslope_*(std::exp(curr_time + 1) - std::exp(B_.fstp_))
+        ? std::exp(std::log(B_.freq_) + B_.fslope_*(curr_time - B_.fstp_ + 1))
         : B_.freq_ + B_.fslope_*(curr_time - B_.fstp_ + 1);
 
-      double time_s    = 0.001*curr_time*Time::get_resolution().get_ms();
-      double current   = amplitude*std::sin(frequency*time_s + B_.phase_);
+      double resolution = 0.001*Time::get_resolution().get_ms();  // in seconds
+
+      S_.phase_ = P_.log_sweep_
+        ? S_.phase_ + 2*numerics::pi*frequency*resolution
+        : frequency*curr_time*resolution;
+
+      double current = amplitude*std::sin(B_.phase_ + S_.phase_);
 
       CurrentEvent ce;
       ce.set_current( current );
